@@ -2,7 +2,7 @@ import sys
 import codecs
 import os
 import re
-
+import math
 debug = codecs.open('debug.txt', 'w', 'utf-8')
 
 
@@ -20,13 +20,17 @@ def fetch_data(cand, ref):
 def count_ngram(candidate, references, n):
     clipped_count = 0
     count = 0
+    r = 0
+    c = 0
     for si in range(len(candidate)):
         ref_counts = []
+        ref_lengths = []
         for reference in references:
             ref_sentence = reference[si]
             ngram_d = {}
             ref_sentence = re.sub("[^\w']", ' ', ref_sentence)
             words = ref_sentence.strip().split()
+            ref_lengths.append(len(words))
             if n > 1:
                 limits = len(words) - n + 1
             else:
@@ -73,7 +77,11 @@ def count_ngram(candidate, references, n):
         debug.write("---------------\n")
         clipped_count += clip_count(cand_dict, ref_counts) * n
         count += limits * n
-    return float(clipped_count) / count
+        r += best_length_match(ref_lengths, len(words))
+        c += len(words)
+        pr = float(clipped_count) / count
+        bp = brevity_penalty(c, r)
+    return pr, bp
 
 
 def clip_count(cand_d, ref_ds):
@@ -90,9 +98,36 @@ def clip_count(cand_d, ref_ds):
     return count
 
 
+def best_length_match(ref_l, cand_l):
+    best = abs(cand_l-ref_l[0])
+    for ref in ref_l:
+        best = min(ref, best)
+    return best
+
+
+def brevity_penalty(c, r):
+    if c > r:
+        bp = 1
+    else:
+        bp = math.exp(1-(r/c))
+    return bp
+
+
+def geometric_mean(precisions):
+    wpr = 0
+    for i in range(len(precisions)):
+        pr = math.log(precisions[i])
+        wn = 1 / (i+1)
+        wpr += wn * pr
+    return wpr
+
+
 def main():
-    candidate, references= fetch_data(sys.argv[1], sys.argv[2])
-    pr = count_ngram(candidate, references, 3)
-    print pr
+    candidate, references = fetch_data(sys.argv[1], sys.argv[2])
+    precisions = []
+    for i in range(4):
+        pr, bp = count_ngram(candidate, references, i+1)
+        precisions.append(pr)
+    print 'BLUE = {}'.format(geometric_mean(precisions) * bp)
 
 main()
