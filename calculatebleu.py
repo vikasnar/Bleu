@@ -3,15 +3,20 @@ import codecs
 import os
 import math
 import operator
-debug = codecs.open('debug.txt', 'w', 'utf-8')
+
+out = open('bleu_out.txt', 'w')
 
 
 def fetch_data(cand, ref):
     references = []
-    for root, dirs, files in os.walk(ref):
-        for f in files:
-            reference_file = codecs.open(os.path.join(root, f), 'r', 'utf-8')
-            references.append(reference_file.readlines())
+    if '.txt' in ref:
+        reference_file = codecs.open(ref, 'r', 'utf-8')
+        references.append(reference_file.readlines())
+    else:
+        for root, dirs, files in os.walk(ref):
+            for f in files:
+                reference_file = codecs.open(os.path.join(root, f), 'r', 'utf-8')
+                references.append(reference_file.readlines())
     candidate_file = codecs.open(cand, 'r', 'utf-8')
     candidate = candidate_file.readlines()
     return candidate, references
@@ -40,9 +45,6 @@ def count_ngram(candidate, references, n):
                     ngram_d[ngram] += 1
                 else:
                     ngram_d[ngram] = 1
-            for key, value in ngram_d.iteritems():
-                debug.write(u"{} - {}\n".format(key, value))
-            debug.write("---------------\n")
             ref_counts.append(ngram_d)
         # candidate
         cand_sentence = candidate[si]
@@ -58,9 +60,6 @@ def count_ngram(candidate, references, n):
                 cand_dict[ngram] += 1
             else:
                 cand_dict[ngram] = 1
-        for key, value in cand_dict.iteritems():
-            debug.write(u"{} - {}\n".format(key, value))
-        debug.write("---------------\n")
         clipped_count += clip_count(cand_dict, ref_counts)
         count += limits
         r += best_length_match(ref_lengths, len(words))
@@ -101,7 +100,7 @@ def brevity_penalty(c, r):
     if c > r:
         bp = 1
     else:
-        bp = math.exp(1-(r/c))
+        bp = math.exp(1-(float(r)/c))
     return bp
 
 
@@ -116,6 +115,9 @@ def BLEU():
         print 'For {}-gram'.format(i+1)
         pr, bp = count_ngram(candidate, references, i+1)
         precisions.append(pr)
-    print 'BLEU = {}'.format(geometric_mean(precisions) * bp)
+    bleu = geometric_mean(precisions) * bp
+    print 'BLEU = {}'.format(bleu)
+    out.write(str(bleu))
+
 
 BLEU()
