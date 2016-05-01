@@ -3,6 +3,7 @@ import codecs
 import os
 import re
 import math
+import operator
 debug = codecs.open('debug.txt', 'w', 'utf-8')
 
 
@@ -79,7 +80,10 @@ def count_ngram(candidate, references, n):
         count += limits * n
         r += best_length_match(ref_lengths, len(words))
         c += len(words)
-        pr = float(clipped_count) / count
+        if clipped_count == 0:
+            pr = 0
+        else:
+            pr = float(clipped_count) / count
         bp = brevity_penalty(c, r)
     return pr, bp
 
@@ -99,9 +103,12 @@ def clip_count(cand_d, ref_ds):
 
 
 def best_length_match(ref_l, cand_l):
-    best = abs(cand_l-ref_l[0])
+    least = abs(cand_l-ref_l[0])
+    best = ref_l[0]
     for ref in ref_l:
-        best = min(ref, best)
+        if ref < least:
+            least = ref
+            best = ref
     return best
 
 
@@ -114,20 +121,22 @@ def brevity_penalty(c, r):
 
 
 def geometric_mean(precisions):
-    wpr = 0
-    for i in range(len(precisions)):
-        pr = math.log(precisions[i])
-        wn = 1 / (i+1)
-        wpr += wn * pr
-    return wpr
+    return (reduce(operator.mul, precisions)) ** (1.0 / len(precisions))
+    # wpr = 0
+    # for i in range(len(precisions)):
+    #     pr = math.log(precisions[i])
+    #     wn = 1 / (i+1)
+    #     wpr += wn * pr
+    # return wpr
 
 
-def main():
+def BLEU():
     candidate, references = fetch_data(sys.argv[1], sys.argv[2])
     precisions = []
     for i in range(4):
+        print 'For {}-gram'.format(i+1)
         pr, bp = count_ngram(candidate, references, i+1)
         precisions.append(pr)
-    print 'BLUE = {}'.format(geometric_mean(precisions) * bp)
+    print 'BLEU = {}'.format(geometric_mean(precisions) * bp)
 
-main()
+BLEU()
