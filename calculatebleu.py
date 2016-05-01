@@ -1,7 +1,6 @@
 import sys
 import codecs
 import os
-import re
 import math
 import operator
 debug = codecs.open('debug.txt', 'w', 'utf-8')
@@ -29,7 +28,6 @@ def count_ngram(candidate, references, n):
         for reference in references:
             ref_sentence = reference[si]
             ngram_d = {}
-            ref_sentence = re.sub("[^\w']", ' ', ref_sentence)
             words = ref_sentence.strip().split()
             ref_lengths.append(len(words))
             if n > 1:
@@ -37,13 +35,7 @@ def count_ngram(candidate, references, n):
             else:
                 limits = len(words)
             for i in range(0, limits):
-                ngram = ""
-                if n > 1:
-                    for j in range(i, i + n):
-                        ngram = "{} {}".format(ngram, words[j])
-                    ngram = ngram.strip().lower()
-                else:
-                    ngram = words[i].lower()
+                ngram = ' '.join(words[i:i+n]).lower()
                 if ngram in ngram_d.keys():
                     ngram_d[ngram] += 1
                 else:
@@ -55,20 +47,13 @@ def count_ngram(candidate, references, n):
         # candidate
         cand_sentence = candidate[si]
         cand_dict = {}
-        cand_sentence = re.sub("[^\w']", ' ', cand_sentence)
         words = cand_sentence.strip().split()
         if n > 1:
             limits = len(words) - n + 1
         else:
             limits = len(words)
         for i in range(0, limits):
-            ngram = ""
-            if n > 1:
-                for j in range(i, i + n):
-                    ngram = "{} {}".format(ngram, words[j])
-                ngram = ngram.strip().lower()
-            else:
-                ngram = words[i].lower()
+            ngram = ' '.join(words[i:i + n]).lower()
             if ngram in cand_dict:
                 cand_dict[ngram] += 1
             else:
@@ -76,15 +61,15 @@ def count_ngram(candidate, references, n):
         for key, value in cand_dict.iteritems():
             debug.write(u"{} - {}\n".format(key, value))
         debug.write("---------------\n")
-        clipped_count += clip_count(cand_dict, ref_counts) * n
-        count += limits * n
+        clipped_count += clip_count(cand_dict, ref_counts)
+        count += limits
         r += best_length_match(ref_lengths, len(words))
         c += len(words)
-        if clipped_count == 0:
-            pr = 0
-        else:
-            pr = float(clipped_count) / count
-        bp = brevity_penalty(c, r)
+    if clipped_count == 0:
+        pr = 0
+    else:
+        pr = float(clipped_count) / count
+    bp = brevity_penalty(c, r)
     return pr, bp
 
 
@@ -122,12 +107,6 @@ def brevity_penalty(c, r):
 
 def geometric_mean(precisions):
     return (reduce(operator.mul, precisions)) ** (1.0 / len(precisions))
-    # wpr = 0
-    # for i in range(len(precisions)):
-    #     pr = math.log(precisions[i])
-    #     wn = 1 / (i+1)
-    #     wpr += wn * pr
-    # return wpr
 
 
 def BLEU():
