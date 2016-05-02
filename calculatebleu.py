@@ -8,6 +8,7 @@ out = open('bleu_out.txt', 'w')
 
 
 def fetch_data(cand, ref):
+    """ Store each reference and candidate sentences as a list """
     references = []
     if '.txt' in ref:
         reference_file = codecs.open(ref, 'r', 'utf-8')
@@ -28,18 +29,18 @@ def count_ngram(candidate, references, n):
     r = 0
     c = 0
     for si in range(len(candidate)):
+        # Calculate precision for each sentence
         ref_counts = []
         ref_lengths = []
+        # Build dictionary of ngram counts
         for reference in references:
             ref_sentence = reference[si]
             ngram_d = {}
             words = ref_sentence.strip().split()
             ref_lengths.append(len(words))
-            if n > 1:
-                limits = len(words) - n + 1
-            else:
-                limits = len(words)
-            for i in range(0, limits):
+            limits = len(words) - n + 1
+            # loop through the sentance consider the ngram length
+            for i in range(limits):
                 ngram = ' '.join(words[i:i+n]).lower()
                 if ngram in ngram_d.keys():
                     ngram_d[ngram] += 1
@@ -50,10 +51,7 @@ def count_ngram(candidate, references, n):
         cand_sentence = candidate[si]
         cand_dict = {}
         words = cand_sentence.strip().split()
-        if n > 1:
-            limits = len(words) - n + 1
-        else:
-            limits = len(words)
+        limits = len(words) - n + 1
         for i in range(0, limits):
             ngram = ' '.join(words[i:i + n]).lower()
             if ngram in cand_dict:
@@ -73,6 +71,7 @@ def count_ngram(candidate, references, n):
 
 
 def clip_count(cand_d, ref_ds):
+    """Count the clip count for each ngram considering all references"""
     count = 0
     for m in cand_d.keys():
         m_w = cand_d[m]
@@ -82,11 +81,11 @@ def clip_count(cand_d, ref_ds):
                 m_max = max(m_max, ref[m])
         m_w = min(m_w, m_max)
         count += m_w
-    print "{}/{}".format(count, sum(cand_d.values()))
     return count
 
 
 def best_length_match(ref_l, cand_l):
+    """Find the closest length of reference to that of candidate"""
     least = abs(cand_l-ref_l[0])
     best = ref_l[0]
     for ref in ref_l:
@@ -112,11 +111,9 @@ def BLEU():
     candidate, references = fetch_data(sys.argv[1], sys.argv[2])
     precisions = []
     for i in range(4):
-        print 'For {}-gram'.format(i+1)
         pr, bp = count_ngram(candidate, references, i+1)
         precisions.append(pr)
     bleu = geometric_mean(precisions) * bp
-    print 'BLEU = {}'.format(bleu)
     out.write(str(bleu))
 
 
