@@ -86,11 +86,11 @@ def clip_count(cand_d, ref_ds):
 
 def best_length_match(ref_l, cand_l):
     """Find the closest length of reference to that of candidate"""
-    least = abs(cand_l-ref_l[0])
+    least_diff = abs(cand_l-ref_l[0])
     best = ref_l[0]
     for ref in ref_l:
-        if ref < least:
-            least = ref
+        if abs(cand_l-ref) < least_diff:
+            least_diff = abs(cand_l-ref)
             best = ref
     return best
 
@@ -114,6 +114,7 @@ def BLEU():
         pr, bp = count_ngram(candidate, references, i+1)
         precisions.append(pr)
     bleu = geometric_mean(precisions) * bp
+    print bleu
     out.write(str(bleu))
 
 
