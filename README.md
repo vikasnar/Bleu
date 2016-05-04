@@ -3,7 +3,7 @@ Calculate the Bleu Score for Machine Translated Text.
 -----------------------
 HOW TO RUN
 
-python calculatebleu.py candidate-file.txt reference-file/directory
+python calculatebleu.py "candidate-file.txt" "reference-file/directory"
 
 OUTPUT
 
