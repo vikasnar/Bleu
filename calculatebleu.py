@@ -3,8 +3,8 @@ import codecs
 import os
 import math
 import operator
+import json
 
-out = open('bleu_out.txt', 'w')
 
 
 def fetch_data(cand, ref):
@@ -107,15 +107,18 @@ def geometric_mean(precisions):
     return (reduce(operator.mul, precisions)) ** (1.0 / len(precisions))
 
 
-def BLEU():
-    candidate, references = fetch_data(sys.argv[1], sys.argv[2])
+def BLEU(candidate, references):
     precisions = []
     for i in range(4):
         pr, bp = count_ngram(candidate, references, i+1)
         precisions.append(pr)
     bleu = geometric_mean(precisions) * bp
+    return bleu
+
+if __name__ == "__main__":
+    candidate, references = fetch_data(sys.argv[1], sys.argv[2])
+    bleu = BLEU(candidate, references)
     print bleu
+    out = open('bleu_out.txt', 'w')
     out.write(str(bleu))
-
-
-BLEU()
+    out.close()
