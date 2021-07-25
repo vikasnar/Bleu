@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow
 
 from UI_qt.mainWindowUI import Ui_MainWindow
-from calculatebleu import BLEU
+from utils.calculatebleu import BLEU
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
