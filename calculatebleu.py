@@ -4,7 +4,7 @@ import os
 import math
 import operator
 import json
-
+from functools import reduce
 
 
 def fetch_data(cand, ref):
@@ -118,7 +118,7 @@ def BLEU(candidate, references):
 if __name__ == "__main__":
     candidate, references = fetch_data(sys.argv[1], sys.argv[2])
     bleu = BLEU(candidate, references)
-    print bleu
+    print(bleu)
     out = open('bleu_out.txt', 'w')
     out.write(str(bleu))
     out.close()
